@@ -81,7 +81,7 @@ foreach my $i (@barcode){
     chomp $fq1;
 
     print FQQC "${fastqc} -f fastq $fq1;$fqcheck -r $fq1 -c ${outdir}/fqqc/$i/1.fqcheck;perl $path/fqcheck_distribute.pl ${outdir}/fqqc/$i/1.fqcheck -o ${outdir}/fqqc/$i/${lane}_${i}.\n";
-    print ALIGN "${bwa} aln -e $length -t $threads $ref $fq1 >${od}/${lane}_${i}.sai;${bwa} samse ${ref} ${od}/${lane}_${i}.sai $fq1|${samtools} view -@ $threads -buhS -t ${ref}.fai - ${samtools} sort -@ $threads -m 1000000000 -T ${od}/hg.sort -o ${od}/${lane}_${i}.1.sorted.bam -;${java} -jar ${picard_dir}/MarkDuplicates.jar I=${od}/${lane}_${i}.1.sorted.bam O=${od}/${lane}_${i}.rmdup.bam M=${od}/${lane}_${i}.2.rmdup.mat REMOVE_DUPLICATES=false;${samtools} index ${od}/${lane}_${i}.rmdup.bam\n";
+    print ALIGN "${bwa} aln -e $length -t $threads $ref $fq1 > ${od}/${lane}_${i}.sai; ${bwa} samse ${ref} ${od}/${lane}_${i}.sai $fq1 | ${samtools} view -@ $threads -buhS -t ${ref}.fai - | ${samtools} sort -@ $threads -m 1000000000 -T ${od}/hg.sort -o ${od}/${lane}_${i}.1.sorted.bam -; ${java} -jar ${picard_dir}/MarkDuplicates.jar I=${od}/${lane}_${i}.1.sorted.bam O=${od}/${lane}_${i}.rmdup.bam M=${od}/${lane}_${i}.2.rmdup.mat REMOVE_DUPLICATES=false;${samtools} index ${od}/${lane}_${i}.rmdup.bam\n";
     print STAT "$samtools flagstat ${od}/${lane}_${i}.rmdup.bam >${od}/${i}.bam.flagstat;perl $Bin/align.stat.pl ${od}/${lane}_${i}.rmdup.bam ${od}/${i}_mapstat.xls\n";
 }
 close FQQC;
@@ -90,11 +90,11 @@ close STAT;
 
 print RUN "#!/usr/bin/perl\nuse strict;\nuse threads;
   my \$step1 = async{
-    system(\"perl $qsub_sge -resource=\\\"num_proc=1,vf=1G -P $pid -q $qid\\\" --jobprefix fqqc -reqsub $outdir/bin/shell_tmp/s1.fqqc.sh\");
+    system(\"perl $qsub_sge -resource=\\\"num_proc=1,vf=1G -P $pid -q $qid\\\" --jobprefix fqqc --convert no -reqsub $outdir/bin/shell_tmp/s1.fqqc.sh\");
   };
   my \$step2 = async{
-    system(\"perl $qsub_sge -resource=\\\"num_proc=1,vf=8G -P $pid -q $qid\\\" --jobprefix align -reqsub $outdir/bin/shell_tmp/s2.align.sh\");
-    system(\"perl $qsub_sge -resource=\\\"num_proc=1,vf=8G -P $pid -q $qid\\\" --jobprefix stat -reqsub $outdir/bin/shell_tmp/s3.stat.sh\");
+    system(\"perl $qsub_sge -resource=\\\"num_proc=1,vf=8G -P $pid -q $qid\\\" --jobprefix align --convert no -reqsub $outdir/bin/shell_tmp/s2.align.sh\");
+    system(\"perl $qsub_sge -resource=\\\"num_proc=1,vf=8G -P $pid -q $qid\\\" --jobprefix stat --convert no -reqsub $outdir/bin/shell_tmp/s3.stat.sh\");
   };
   if(\$step1->join() == 0 && \$step2->join() == 0){
     exit 0;
