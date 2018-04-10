@@ -102,7 +102,7 @@ print RUN "#!/usr/bin/perl\nuse strict;\nuse threads;
 
 close RUN;
 print MAIN "perl $outdir/bin/shell_tmp/run.1.pl\n";
-print MAIN "perl $Bin/print_result.pl $indir $outdir $barcode\n";
+print MAIN "perl $Bin/print_result.pl $outdir/align $outdir $barcode\n";
 close MAIN;
 
 
